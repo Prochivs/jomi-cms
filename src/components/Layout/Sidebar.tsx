@@ -1,5 +1,5 @@
 import React from 'react';
-import { Home, FileText, Calendar, Megaphone, Images as Pages, Settings, LogOut, Church, Image } from 'lucide-react';
+import { Home, FileText, Calendar, Settings, LogOut, Church, Image } from 'lucide-react';
 import { ContentType } from '../../types';
 
 interface SidebarProps {
@@ -13,8 +13,6 @@ const Sidebar: React.FC<SidebarProps> = ({ activeSection, onSectionChange, onLog
     { id: 'dashboard' as const, label: 'Dashboard', icon: Home },
     { id: 'sermons' as const, label: 'Sermons', icon: FileText },
     { id: 'events' as const, label: 'Events', icon: Calendar },
-    { id: 'announcements' as const, label: 'Announcements', icon: Megaphone },
-    { id: 'pages' as const, label: 'Pages', icon: Pages },
     { id: 'gallery' as const, label: 'Gallery', icon: Image },
   ];
 

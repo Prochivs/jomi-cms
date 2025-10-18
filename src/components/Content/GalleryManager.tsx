@@ -69,6 +69,8 @@ const GalleryManager: React.FC = () => {
     setCoverImagePreview('');
     setPhotosPreviews([]);
     setShowForm(true);
+    // Clear any previous errors when starting to create
+    setError(null);
   };
 
   const handleEdit = (item: GalleryItem) => {
@@ -86,6 +88,8 @@ const GalleryManager: React.FC = () => {
     setCoverImagePreview(item.coverImage || '');
     setPhotosPreviews(item.photos || []);
     setShowForm(true);
+    // Clear any previous errors when starting to edit
+    setError(null);
   };
 
   const handleFormSubmit = async () => {
@@ -117,9 +121,16 @@ const GalleryManager: React.FC = () => {
         console.log('Gallery created successfully');
       }
       
+      // Clear any previous errors
+      setError(null);
+      
+      // Reload gallery items to show the new/updated item
       await loadGalleryItems();
+      
+      // Close form and reset all form state
       setShowForm(false);
       setEditingItem(null);
+      
       // Reset form data
       setFormData({
         title: '',
@@ -131,6 +142,7 @@ const GalleryManager: React.FC = () => {
       setPhotoFiles([]);
       setCoverImagePreview('');
       setPhotosPreviews([]);
+      
     } catch (err) {
       console.error('Error in form submit:', err);
       setError(err instanceof Error ? err.message : 'Failed to save gallery item');
@@ -139,11 +151,23 @@ const GalleryManager: React.FC = () => {
 
   const handleDelete = async (id: string) => {
     try {
+      console.log('Deleting gallery with ID:', id);
       await galleryApi.delete(id);
+      console.log('Gallery deleted successfully');
+      
+      // Clear any previous errors
+      setError(null);
+      
+      // Reload gallery items to reflect the deletion
       await loadGalleryItems();
+      
+      // Close delete confirmation dialog
       setDeleteConfirm(null);
+      
     } catch (err) {
+      console.error('Error deleting gallery:', err);
       setError(err instanceof Error ? err.message : 'Failed to delete gallery item');
+      // Keep the delete confirmation dialog open so user can try again
     }
   };
 
@@ -191,6 +215,8 @@ const GalleryManager: React.FC = () => {
     setPhotoFiles([]);
     setCoverImagePreview('');
     setPhotosPreviews([]);
+    // Clear any errors when canceling
+    setError(null);
   };
 
   const filteredItems = galleryItems.filter(item =>
@@ -292,7 +318,9 @@ const GalleryManager: React.FC = () => {
                         <p class="text-xs text-gray-500">Image failed to load</p>
                       </div>
                     `;
-                    e.currentTarget.parentNode.appendChild(fallback);
+                    if (e.currentTarget.parentNode) {
+                      e.currentTarget.parentNode.appendChild(fallback);
+                    }
                   }}
                 />
               ) : (
