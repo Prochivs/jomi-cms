@@ -22,34 +22,65 @@ const makeRequest = async (url: string, options: RequestInit = {}) => {
 };
 
 export const authApi = {
-  login: async (email: string, password: string): Promise<User> => {
-    // Login disabled - always return admin user
-    const user: User = {
-      id: '1',
-      email: 'admin@church.com',
-      name: 'Admin',
-      role: 'admin'
-    };
+  login: async (email: string, password: string): Promise<{ user: User; token: string }> => {
+    const response = await makeRequest('/login', {
+      method: 'POST',
+      body: JSON.stringify({ email, password }),
+    });
     
-    localStorage.setItem('user', JSON.stringify(user));
-    localStorage.setItem('isLoggedIn', 'true');
+    if (response.success) {
+      const user: User = {
+        id: response.data.user._id,
+        email: response.data.user.email,
+        name: response.data.user.name,
+        role: response.data.user.role
+      };
+      
+      return {
+        user,
+        token: response.data.token
+      };
+    }
     
-    return user;
+    throw new Error('Login failed');
   },
   
   getCurrentUser: async (): Promise<User | null> => {
-    // Always return admin user - no login required
-    const user: User = {
-      id: '1',
-      email: 'admin@church.com',
-      name: 'Admin',
-      role: 'admin'
-    };
+    const token = localStorage.getItem('auth_token');
+    if (!token) {
+      return null;
+    }
     
-    localStorage.setItem('user', JSON.stringify(user));
-    localStorage.setItem('isLoggedIn', 'true');
-    
-    return user;
+    try {
+      const response = await fetch(`${API_BASE_URL}/auth/me`, {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+      });
+      
+      if (!response.ok) {
+        return null;
+      }
+      
+      const data = await response.json();
+      
+      if (data.success) {
+        const user: User = {
+          id: data.data.user._id,
+          email: data.data.user.email,
+          name: data.data.user.name,
+          role: data.data.user.role
+        };
+        
+        return user;
+      }
+      
+      return null;
+    } catch (error) {
+      console.error('Failed to get current user:', error);
+      return null;
+    }
   }
 };
 
