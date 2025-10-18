@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Edit, Trash2, Search, Calendar, Image as ImageIcon, Eye } from 'lucide-react';
+import { Plus, Edit, Trash2, Search, Calendar, Image as ImageIcon } from 'lucide-react';
 import { galleryApi } from '../../services/api';
 
 interface GalleryItem {
@@ -27,10 +27,14 @@ const GalleryManager: React.FC = () => {
     title: '',
     description: '',
     date: '',
-    coverImage: '',
     category: 'general',
-    photos: [] as string[],
   });
+
+  // File upload states
+  const [coverImageFile, setCoverImageFile] = useState<File | null>(null);
+  const [photoFiles, setPhotoFiles] = useState<File[]>([]);
+  const [coverImagePreview, setCoverImagePreview] = useState<string>('');
+  const [photosPreviews, setPhotosPreviews] = useState<string[]>([]);
 
   // Load gallery items
   useEffect(() => {
@@ -58,10 +62,12 @@ const GalleryManager: React.FC = () => {
       title: '',
       description: '',
       date: '',
-      coverImage: '',
       category: 'general',
-      photos: [],
     });
+    setCoverImageFile(null);
+    setPhotoFiles([]);
+    setCoverImagePreview('');
+    setPhotosPreviews([]);
     setShowForm(true);
   };
 
@@ -72,25 +78,45 @@ const GalleryManager: React.FC = () => {
       title: item.title,
       description: item.description,
       date: item.date,
-      coverImage: item.coverImage,
       category: item.category,
-      photos: item.photos || [],
     });
+    // Note: For editing, we'll keep existing images and allow adding new ones
+    setCoverImageFile(null);
+    setPhotoFiles([]);
+    setCoverImagePreview(item.coverImage || '');
+    setPhotosPreviews(item.photos || []);
     setShowForm(true);
   };
 
   const handleFormSubmit = async () => {
     try {
       console.log('Submitting form:', { editingItem: !!editingItem, formData });
+      
+      // Create FormData for file upload
+      const formDataObj = new FormData();
+      formDataObj.append('title', formData.title);
+      formDataObj.append('date', formData.date);
+      formDataObj.append('description', formData.description);
+      formDataObj.append('category', formData.category);
+      
+      if (coverImageFile) {
+        formDataObj.append('coverImage', coverImageFile);
+      }
+      
+      photoFiles.forEach((file) => {
+        formDataObj.append('photos', file);
+      });
+      
       if (editingItem) {
         console.log('Updating gallery with ID:', editingItem.id);
-        await galleryApi.update(editingItem.id, formData);
+        await galleryApi.update(editingItem.id, formDataObj);
         console.log('Gallery updated successfully');
       } else {
         console.log('Creating new gallery');
-        await galleryApi.create(formData);
+        await galleryApi.create(formDataObj);
         console.log('Gallery created successfully');
       }
+      
       await loadGalleryItems();
       setShowForm(false);
       setEditingItem(null);
@@ -99,10 +125,12 @@ const GalleryManager: React.FC = () => {
         title: '',
         description: '',
         date: '',
-        coverImage: '',
         category: 'general',
-        photos: [],
       });
+      setCoverImageFile(null);
+      setPhotoFiles([]);
+      setCoverImagePreview('');
+      setPhotosPreviews([]);
     } catch (err) {
       console.error('Error in form submit:', err);
       setError(err instanceof Error ? err.message : 'Failed to save gallery item');
@@ -119,9 +147,35 @@ const GalleryManager: React.FC = () => {
     }
   };
 
-  const handlePhotosChange = (value: string) => {
-    const photos = value.split('\n').filter(url => url.trim());
-    setFormData({ ...formData, photos });
+  const handleCoverImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setCoverImageFile(file);
+      // Create preview
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setCoverImagePreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handlePhotosFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    setPhotoFiles(files);
+    
+    // Create previews
+    const previews: string[] = [];
+    files.forEach((file) => {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        previews.push(reader.result as string);
+        if (previews.length === files.length) {
+          setPhotosPreviews(previews);
+        }
+      };
+      reader.readAsDataURL(file);
+    });
   };
 
   const handleCancel = () => {
@@ -131,10 +185,12 @@ const GalleryManager: React.FC = () => {
       title: '',
       description: '',
       date: '',
-      coverImage: '',
       category: 'general',
-      photos: [],
     });
+    setCoverImageFile(null);
+    setPhotoFiles([]);
+    setCoverImagePreview('');
+    setPhotosPreviews([]);
   };
 
   const filteredItems = galleryItems.filter(item =>
@@ -371,30 +427,39 @@ const GalleryManager: React.FC = () => {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Cover Image URL
+                    Cover Image
                   </label>
                   <input
-                    type="url"
-                    value={formData.coverImage}
-                    onChange={(e) => setFormData({ ...formData, coverImage: e.target.value })}
+                    type="file"
+                    accept="image/*"
+                    onChange={handleCoverImageChange}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    placeholder="Enter cover image URL"
                   />
+                  {coverImagePreview && (
+                    <img src={coverImagePreview} alt="Preview" className="mt-2 h-32 w-full object-cover rounded-lg" />
+                  )}
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Additional Photo URLs
+                    Additional Photos
                   </label>
-                  <textarea
-                    value={formData.photos.join('\n')}
-                    onChange={(e) => handlePhotosChange(e.target.value)}
+                  <input
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    onChange={handlePhotosFileChange}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    rows={3}
-                    placeholder="Enter additional photo URLs, one per line"
                   />
+                  {photosPreviews.length > 0 && (
+                    <div className="mt-2 grid grid-cols-4 gap-2">
+                      {photosPreviews.map((preview, idx) => (
+                        <img key={idx} src={preview} alt={`Preview ${idx + 1}`} className="h-20 w-20 object-cover rounded-lg" />
+                      ))}
+                    </div>
+                  )}
                   <p className="text-sm text-gray-500 mt-1">
-                    Enter one photo URL per line
+                    Select multiple images to upload
                   </p>
                 </div>
               </div>

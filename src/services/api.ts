@@ -310,26 +310,39 @@ export const galleryApi = {
   },
   
   create: async (gallery: any): Promise<any> => {
-    const response = await makeRequest('/gallery', {
+    // Don't use makeRequest for file uploads, use fetch directly
+    const response = await fetch(`${API_BASE_URL}/gallery`, {
       method: 'POST',
-      body: JSON.stringify(gallery),
+      body: gallery, // Pass FormData directly (no JSON.stringify, no Content-Type header)
     });
 
-    if (response.success) {
-      return response.data;
+    if (!response.ok) {
+      throw new Error(`API request failed: ${response.status} ${response.statusText}`);
+    }
+
+    const result = await response.json();
+    
+    if (result.success) {
+      return result.data;
     }
     
     throw new Error('Failed to create gallery item');
   },
   
   update: async (id: string, gallery: any): Promise<any> => {
-    const response = await makeRequest(`/gallery/${id}`, {
+    const response = await fetch(`${API_BASE_URL}/gallery/${id}`, {
       method: 'PUT',
-      body: JSON.stringify(gallery),
+      body: gallery, // Pass FormData directly
     });
 
-    if (response.success) {
-      return response.data;
+    if (!response.ok) {
+      throw new Error(`API request failed: ${response.status} ${response.statusText}`);
+    }
+
+    const result = await response.json();
+    
+    if (result.success) {
+      return result.data;
     }
     
     throw new Error('Failed to update gallery item');
