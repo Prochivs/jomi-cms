@@ -2,7 +2,7 @@
 import { User, Sermon, Event, Announcement, Page } from '../types';
 
 // Backend API base URL
-const API_BASE_URL = 'http://localhost:3000';
+const API_BASE_URL = 'https://jomi-backend.vercel.app';
 
 // Helper function to make requests without authentication
 const makeRequest = async (url: string, options: RequestInit = {}) => {
