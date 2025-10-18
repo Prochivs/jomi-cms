@@ -23,26 +23,20 @@ const makeRequest = async (url: string, options: RequestInit = {}) => {
 
 export const authApi = {
   login: async (email: string, password: string): Promise<{ user: User; token: string }> => {
-    const response = await makeRequest('/login', {
-      method: 'POST',
-      body: JSON.stringify({ email, password }),
-    });
+    // Bypass authentication - allow login without credentials
+    const user: User = {
+      id: '1',
+      email: email || 'admin@church.com',
+      name: 'Admin',
+      role: 'admin'
+    };
     
-    if (response.success) {
-      const user: User = {
-        id: response.data.user._id,
-        email: response.data.user.email,
-        name: response.data.user.name,
-        role: response.data.user.role
-      };
-      
-      return {
-        user,
-        token: response.data.token
-      };
-    }
+    const token = 'mock-jwt-token-' + Date.now();
     
-    throw new Error('Login failed');
+    return {
+      user,
+      token
+    };
   },
   
   getCurrentUser: async (): Promise<User | null> => {
@@ -51,36 +45,15 @@ export const authApi = {
       return null;
     }
     
-    try {
-      const response = await fetch(`${API_BASE_URL}/auth/me`, {
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-      });
-      
-      if (!response.ok) {
-        return null;
-      }
-      
-      const data = await response.json();
-      
-      if (data.success) {
-        const user: User = {
-          id: data.data.user._id,
-          email: data.data.user.email,
-          name: data.data.user.name,
-          role: data.data.user.role
-        };
-        
-        return user;
-      }
-      
-      return null;
-    } catch (error) {
-      console.error('Failed to get current user:', error);
-      return null;
-    }
+    // Bypass authentication - return admin user
+    const user: User = {
+      id: '1',
+      email: 'admin@church.com',
+      name: 'Admin',
+      role: 'admin'
+    };
+    
+    return user;
   }
 };
 
