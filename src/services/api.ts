@@ -64,7 +64,7 @@ export const sermonApi = {
     if (response.success) {
       // Transform backend data to frontend format
       return response.data.map((sermon: any) => ({
-        id: sermon.id.toString(),
+        id: sermon._id.toString(),
         title: sermon.title,
         description: sermon.description || '',
         preacher: sermon.speaker,
@@ -87,7 +87,7 @@ export const sermonApi = {
     if (response.success) {
       const sermon = response.data;
       return {
-        id: sermon.id.toString(),
+        id: sermon._id.toString(),
         title: sermon.title,
         description: sermon.description || '',
         preacher: sermon.speaker,
@@ -126,7 +126,7 @@ export const sermonApi = {
     if (response.success) {
       const newSermon = response.data;
       return {
-        id: newSermon.id.toString(),
+        id: newSermon._id.toString(),
         title: newSermon.title,
         description: newSermon.description || '',
         preacher: newSermon.speaker,
@@ -165,7 +165,7 @@ export const sermonApi = {
     if (response.success) {
       const updatedSermon = response.data;
       return {
-        id: updatedSermon.id.toString(),
+        id: updatedSermon._id.toString(),
         title: updatedSermon.title,
         description: updatedSermon.description || '',
         preacher: updatedSermon.speaker,
@@ -200,7 +200,7 @@ export const eventApi = {
     if (response.success) {
       // Transform backend data to frontend format
       return response.data.map((event: any) => ({
-        id: event.id.toString(),
+        id: event._id.toString(),
         title: event.title,
         description: event.description || '',
         date: event.date.split('T')[0], // Extract date part
@@ -235,7 +235,7 @@ export const eventApi = {
     if (response.success) {
       const newEvent = response.data;
       return {
-        id: newEvent.id.toString(),
+        id: newEvent._id.toString(),
         title: newEvent.title,
         description: newEvent.description || '',
         date: newEvent.date.split('T')[0],
@@ -270,7 +270,7 @@ export const eventApi = {
     if (response.success) {
       const updatedEvent = response.data;
       return {
-        id: updatedEvent.id.toString(),
+        id: updatedEvent._id.toString(),
         title: updatedEvent.title,
         description: updatedEvent.description || '',
         date: updatedEvent.date.split('T')[0],
