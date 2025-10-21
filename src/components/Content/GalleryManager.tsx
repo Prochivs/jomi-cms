@@ -22,6 +22,7 @@ const GalleryManager: React.FC = () => {
   const [showForm, setShowForm] = useState(false);
   const [editingItem, setEditingItem] = useState<GalleryItem | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
 
   const [formData, setFormData] = useState({
     title: '',
@@ -93,7 +94,10 @@ const GalleryManager: React.FC = () => {
   };
 
   const handleFormSubmit = async () => {
+    if (submitting) return; // Prevent double submission
+    
     try {
+      setSubmitting(true);
       console.log('Submitting form:', { editingItem: !!editingItem, formData });
       
       // Create FormData for file upload
@@ -146,6 +150,8 @@ const GalleryManager: React.FC = () => {
     } catch (err) {
       console.error('Error in form submit:', err);
       setError(err instanceof Error ? err.message : 'Failed to save gallery item');
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -495,15 +501,32 @@ const GalleryManager: React.FC = () => {
               <div className="flex justify-end space-x-3 mt-6">
                 <button
                   onClick={handleCancel}
-                  className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors duration-200"
+                  disabled={submitting}
+                  className={`px-4 py-2 border border-gray-300 rounded-lg transition-colors duration-200 ${
+                    submitting
+                      ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                      : 'hover:bg-gray-50'
+                  }`}
                 >
                   Cancel
                 </button>
                 <button
                   onClick={handleFormSubmit}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200"
+                  disabled={submitting}
+                  className={`px-4 py-2 rounded-lg transition-colors duration-200 flex items-center space-x-2 ${
+                    submitting
+                      ? 'bg-gray-400 text-gray-200 cursor-not-allowed'
+                      : 'bg-blue-600 text-white hover:bg-blue-700'
+                  }`}
                 >
-                  {editingItem ? 'Update Gallery' : 'Create Gallery'}
+                  {submitting ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-gray-200 border-t-transparent rounded-full animate-spin"></div>
+                      <span>{editingItem ? 'Updating...' : 'Creating...'}</span>
+                    </>
+                  ) : (
+                    <span>{editingItem ? 'Update Gallery' : 'Create Gallery'}</span>
+                  )}
                 </button>
               </div>
             </div>
